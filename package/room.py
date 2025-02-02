@@ -1,53 +1,80 @@
-from flask_restful import Resource, Api, request
-from package.model import conn
-
-
+from flask_restful import Resource, request
+from sqlalchemy.exc import IntegrityError  
+from package.models import db, Room
 
 class Rooms(Resource):
-    """This contain apis to carry out activity with all rooms"""
-
+    """APIs for multiple rooms"""
+    
     def get(self):
-        """Retrive all the room and return in form of json"""
-
-        room = conn.execute("SELECT * from room").fetchall()
-        return room
+        """Retrieve all rooms"""
+        rooms = Room.query.all()
+        return [{
+            'room_no': room.room_no,
+            'room_type': room.room_type,
+            'available': room.available
+        } for room in rooms]
 
     def post(self):
-        """Api to add room in the database"""
+        """Add new room"""
+        data = request.get_json(force=True)
+        
+        # Validate required fields
+        if not all(key in data for key in ('room_no', 'room_type')):
+            return {'message': 'Missing required fields (room_no, room_type)'}, 400
+            
+        try:
+            new_room = Room(
+                room_no=data['room_no'],
+                room_type=data['room_type'],
+                available=data.get('available', True)
+            )
+            db.session.add(new_room)
+            db.session.commit()
+        except IntegrityError as e:
+            db.session.rollback()
+            return {'message': 'Room number already exists'}, 400
+        except Exception as e:
+            db.session.rollback()
+            return {'message': str(e)}, 500
+            
+        return {
+            'room_no': new_room.room_no,
+            'room_type': new_room.room_type,
+            'available': new_room.available
+        }, 201
 
-        room = request.get_json(force=True)
-        room_no = room['room_no']
-        room_type = room['room_type']
-        available = room['available']
-        conn.execute('''INSERT INTO room(room_no, room_type, available) VALUES(?,?,?)''', (room_no, room_type, available))
-        conn.commit()
-        return room
+class RoomResource(Resource):
+    """APIs for single room"""
+    
+    def get(self, room_no):
+        """Get single room details"""
+        room = Room.query.get_or_404(room_no)
+        return {
+            'room_no': room.room_no,
+            'room_type': room.room_type,
+            'available': room.available
+        }
 
+    def delete(self, room_no):
+        """Delete a room"""
+        room = Room.query.get_or_404(room_no)
+        db.session.delete(room)
+        db.session.commit()
+        return {'message': 'Room deleted successfully'}, 204
 
-
-class Room(Resource):
-    """This contain all api doing activity with single room"""
-
-    def get(self,room_no):
-        """retrive a singe room details by its room_no"""
-
-        room = conn.execute("SELECT * FROM room WHERE room_no=?",(room_no,)).fetchall()
-        return room
-
-
-    def delete(self,room_no):
-        """Delete the room by its room_no"""
-
-        conn.execute("DELETE FROM room WHERE room_no=?",(room_no,))
-        conn.commit()
-        return {'msg': 'sucessfully deleted'}
-
-    def put(self,room_no):
-        """Update the room details by the room_no"""
-
-        room = request.get_json(force=True)
-        room_type = room['room_type']
-        available = room['available']
-        conn.execute("UPDATE room SET room_type=?,available=? WHERE room_no=?", (room_type, available, room_no))
-        conn.commit()
-        return room
+    def put(self, room_no):
+        """Update room details"""
+        room = Room.query.get_or_404(room_no)
+        data = request.get_json(force=True)
+        
+        if 'room_type' in data:
+            room.room_type = data['room_type']
+        if 'available' in data:
+            room.available = data['available']
+            
+        db.session.commit()
+        return {
+            'room_no': room.room_no,
+            'room_type': room.room_type,
+            'available': room.available
+        }

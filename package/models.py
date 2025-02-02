@@ -84,14 +84,9 @@ class Department(db.Model):
 class Room(db.Model):
     __tablename__ = 'room'
     
-    room_no = db.Column(db.String(50), primary_key=True,autoincrement=True)
-    room_type = db.Column(db.String(100), nullable=False)
-    available = db.Column(db.Boolean, nullable=False)
+    room_no = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    room_type = db.Column(db.String(50), nullable=False)
+    available = db.Column(db.Integer, nullable=False, default=True)
 
-    def to_dict(self):
-        """Convert Room object to dictionary."""
-        return {
-            "room_no": self.room_no,
-            "room_type": self.room_type,
-            "available": self.available
-        }
+    def __repr__(self):
+        return f'<Room {self.room_no} - {self.room_type}>'
