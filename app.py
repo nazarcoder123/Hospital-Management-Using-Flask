@@ -6,6 +6,8 @@ from package.doctor import Doctors, DoctorResource
 from package.nurse import Nurses, NurseResource
 from package.department import Departments, DepartmentResource
 from package.room import Rooms, RoomResource
+from package.prescribes import Prescribes, PrescribeResource  
+from package.appointment import Appointments, AppointmentResource
 from package.models import db  
 import os
 
@@ -37,6 +39,11 @@ api.add_resource(Departments, '/department')
 api.add_resource(DepartmentResource, '/department/<int:department_id>')
 api.add_resource(Rooms, '/room')
 api.add_resource(RoomResource, '/room/<int:room_no>')
+api.add_resource(Prescribes, '/prescribes')
+api.add_resource(PrescribeResource, '/prescribe/<int:doc_id>')
+api.add_resource(Appointments, '/appointment')  
+api.add_resource(AppointmentResource, '/appointment/<int:id>') 
+
 
 
 
@@ -51,5 +58,5 @@ def index():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Create all tables if they don't exist yet
+        db.create_all()  
     app.run(debug=True, host=config['host'], port=config['port'])

@@ -1,61 +1,72 @@
-from flask_restful import Resource, Api, request
-from package.model import conn
-
+from flask_restful import Resource, request
+from package.models import db, Prescribe  # Assuming `db` is your SQLAlchemy instance and Prescribe is the model
 
 
 class Prescribes(Resource):
-    """This contain apis to carry out activity with all prescribess"""
+    """This contains APIs to carry out activity with all prescriptions"""
 
     def get(self):
-        """Retrive all the prescribes and return in form of json"""
-
-        # prescribes = conn.execute("SELECT * from prescribes").fetchall()
-        prescribes = conn.execute("SELECT prescribes.doc_id, doctor.doc_first_name, doctor.doc_last_name, prescribes.pat_id, patient.pat_first_name, patient.pat_last_name, prescribes.med_code, prescribes.p_date, prescribes.app_id, dose FROM prescribes INNER JOIN doctor ON prescribes.doc_id = doctor.doc_id INNER JOIN patient ON prescribes.pat_id = patient.pat_id").fetchall()
-        return prescribes
+        """Retrieve all prescriptions and return in the form of JSON"""
+        prescribes = Prescribe.query.all()  # Get all prescriptions
+        return [prescribe.to_dict() for prescribe in prescribes], 200
 
     def post(self):
-        """Api to add prescribes in the database"""
+        """API to add a prescription in the database"""
+        prescribe_data = request.get_json(force=True)
 
-        prescribes = request.get_json(force=True)
-        doc_id = prescribes['doc_id']
-        pat_id = prescribes['pat_id']
-        med_code = prescribes['med_code']
-        p_date = prescribes['p_date']
-        app_id = prescribes['app_id']
-        dose = prescribes['dose']
-        conn.execute('''INSERT INTO prescribes(doc_id, pat_id, med_code, p_date, app_id, dose) VALUES(?,?,?,?,?,?)''', (doc_id, pat_id, med_code, p_date, app_id, dose))
-        conn.commit()
-        return prescribes
+        new_prescribe = Prescribe(
+            doc_id=prescribe_data['doc_id'],
+            pat_id=prescribe_data['pat_id'],
+            med_code=prescribe_data['med_code'],
+            p_date=prescribe_data['p_date'],
+            app_id=prescribe_data['app_id'],
+            dose=prescribe_data['dose']
+        )
 
+        db.session.add(new_prescribe)
+        db.session.commit()
 
-
-class Prescribe(Resource):
-    """This contain all api doing activity with single prescribes"""
-
-    def get(self,doc_id):
-        """retrive a singe prescribes details by its doc_id"""
-
-        prescribes = conn.execute("SELECT * FROM prescribes WHERE doc_id=?",(doc_id,)).fetchall()
-        return prescribes
+        return new_prescribe.to_dict(), 201  # Return the newly created prescription data
 
 
-    def delete(self,doc_id):
-        """Delete the prescribes by its doc_id"""
+class PrescribeResource(Resource):
+    """This contains all APIs for managing a single prescription"""
 
-        conn.execute("DELETE FROM prescribes WHERE doc_id=?",(doc_id,))
-        conn.commit()
-        return {'msg': 'sucessfully deleted'}
+    def get(self, doc_id):
+        """Retrieve a single prescription's details by its doc_id"""
+        prescribe = Prescribe.query.filter_by(doc_id=doc_id).first()  # Get prescription by doc_id
+        if prescribe:
+            return prescribe.to_dict(), 200
+        return {'msg': 'Prescription not found'}, 404
 
-    def put(self,doc_id):
-        """Update the prescribes details by the doc_id"""
+    def put(self, doc_id):
+        """Update a prescription's details by the doc_id"""
+        prescribe = Prescribe.query.filter_by(doc_id=doc_id).first()
 
-        prescribes = request.get_json(force=True)
-        doc_id = prescribes['doc_id']
-        pat_id = prescribes['pat_id']
-        med_code = prescribes['med_code']
-        p_date = prescribes['p_date']
-        app_id = prescribes['app_id']
-        dose = prescribes['dose']
-        conn.execute("UPDATE prescribes SET doc_id=?,pat_id=?,med_code=?,p_date=?,app_id=?,dose=?, WHERE doc_id=?", (doc_id, pat_id, med_code, p_date, app_id, dose, doc_id))
-        conn.commit()
-        return prescribes
+        if not prescribe:
+            return {'msg': 'Prescription not found'}, 404
+
+        prescribe_data = request.get_json(force=True)
+
+        prescribe.doc_id = prescribe_data['doc_id']
+        prescribe.pat_id = prescribe_data['pat_id']
+        prescribe.med_code = prescribe_data['med_code']
+        prescribe.p_date = prescribe_data['p_date']
+        prescribe.app_id = prescribe_data['app_id']
+        prescribe.dose = prescribe_data['dose']
+
+        db.session.commit()
+
+        return prescribe.to_dict(), 200
+
+    def delete(self, doc_id):
+        """Delete a prescription by its doc_id"""
+        prescribe = Prescribe.query.filter_by(doc_id=doc_id).first()
+
+        if not prescribe:
+            return {'msg': 'Prescription not found'}, 404
+
+        db.session.delete(prescribe)
+        db.session.commit()
+
+        return {'msg': 'Successfully deleted'}, 200

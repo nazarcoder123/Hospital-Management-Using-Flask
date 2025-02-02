@@ -1,55 +1,58 @@
-from flask_restful import Resource, Api, request
-from package.model import conn
-
-
+from flask_restful import Resource, request
+from package.models import db, Appointment  
 
 class Appointments(Resource):
-    """This contain apis to carry out activity with all appiontments"""
+    """This contains APIs to carry out activities with all appointments"""
 
     def get(self):
-        """Retrive all the appointment and return in form of json"""
-
-        appointment = conn.execute("SELECT p.*,d.*,a.* from appointment a LEFT JOIN patient p ON a.pat_id = p.pat_id LEFT JOIN doctor d ON a.doc_id = d.doc_id ORDER BY appointment_date DESC").fetchall()
-        return appointment
+        """Retrieve all appointments and return in the form of JSON"""
+        appointments = Appointment.query.all()  # Get all appointments from the database
+        return [appointment.to_dict() for appointment in appointments], 200
 
     def post(self):
-        """Create the appoitment by assiciating patient and docter with appointment date"""
-
-        appointment = request.get_json(force=True)
-        pat_id = appointment['pat_id']
-        doc_id = appointment['doc_id']
-        appointment_date = appointment['appointment_date']
-        appointment['app_id'] = conn.execute('''INSERT INTO appointment(pat_id,doc_id,appointment_date)
-            VALUES(?,?,?)''', (pat_id, doc_id,appointment_date)).lastrowid
-        conn.commit()
-        return appointment
-
-
-
-class Appointment(Resource):
-    """This contain all api doing activity with single appointment"""
-
-    def get(self,id):
-        """retrive a singe appointment details by its id"""
-
-        appointment = conn.execute("SELECT * FROM appointment WHERE app_id=?",(id,)).fetchall()
-        return appointment
+        """Create an appointment by associating patient and doctor with appointment date"""
+        appointment_data = request.get_json(force=True)
+        new_appointment = Appointment(
+            pat_id=appointment_data['pat_id'],
+            doc_id=appointment_data['doc_id'],
+            appointment_date=appointment_data['appointment_date']
+        )
+        db.session.add(new_appointment)
+        db.session.commit()
+        return new_appointment.to_dict(), 201  # Return the newly created appointment
 
 
-    def delete(self,id):
-        """Delete teh appointment by its id"""
+class AppointmentResource(Resource):
+    """This contains all APIs for managing a single appointment"""
 
-        conn.execute("DELETE FROM appointment WHERE app_id=?",(id,))
-        conn.commit()
-        return {'msg': 'sucessfully deleted'}
+    def get(self, id):
+        """Retrieve a single appointment's details by its id"""
+        appointment = Appointment.query.filter_by(app_id=id).first()  # Get appointment by ID
+        if appointment:
+            return appointment.to_dict(), 200
+        return {'msg': 'Appointment not found'}, 404
+    
 
-    def put(self,id):
+    def put(self, id):
         """Update the appointment details by the appointment id"""
+        appointment = Appointment.query.filter_by(app_id=id).first()
+        if not appointment:
+            return {'msg': 'Appointment not found'}, 404
 
-        appointment = request.get_json(force=True)
-        pat_id = appointment['pat_id']
-        doc_id = appointment['doc_id']
-        conn.execute("UPDATE appointment SET pat_id=?,doc_id=? WHERE app_id=?",
-                     (pat_id, doc_id, id))
-        conn.commit()
-        return appointment
+        appointment_data = request.get_json(force=True)
+        appointment.pat_id = appointment_data['pat_id']
+        appointment.doc_id = appointment_data['doc_id']
+        appointment.appointment_date = appointment_data['appointment_date']
+        
+        db.session.commit()
+        return appointment.to_dict(), 200
+
+    def delete(self, id):
+        """Delete the appointment by its id"""
+        appointment = Appointment.query.filter_by(app_id=id).first()
+        if not appointment:
+            return {'msg': 'Appointment not found'}, 404
+
+        db.session.delete(appointment)
+        db.session.commit()
+        return {'msg': 'Successfully deleted'}, 200

@@ -90,3 +90,57 @@ class Room(db.Model):
 
     def __repr__(self):
         return f'<Room {self.room_no} - {self.room_type}>'
+    
+
+
+class Prescribe(db.Model):
+    __tablename__ = 'prescribes'
+
+    doc_id = db.Column(db.Integer, db.ForeignKey('doctor.doc_id'), primary_key=True)
+    pat_id = db.Column(db.Integer, db.ForeignKey('patient.pat_id'), primary_key=True)
+    med_code = db.Column(db.String(100), nullable=False)
+    p_date = db.Column(db.Date, nullable=False)
+    app_id = db.Column(db.Integer, db.ForeignKey('appointment.app_id'), nullable=False)
+    dose = db.Column(db.String(100), nullable=False)
+
+    # Relationship with Doctor, Patient, and Appointment
+    doctor = db.relationship('Doctor', backref='prescriptions', lazy=True)
+    patient = db.relationship('Patient', backref='prescriptions', lazy=True)
+    appointment = db.relationship('Appointment', backref='prescriptions', lazy=True)
+
+    def to_dict(self):
+        return {
+            "doc_id": self.doc_id,
+            "doctor_name": f"{self.doctor.doc_first_name} {self.doctor.doc_last_name}",
+            "pat_id": self.pat_id,
+            "patient_name": f"{self.patient.pat_first_name} {self.patient.pat_last_name}",
+            "med_code": self.med_code,
+            "p_date": self.p_date.isoformat(),  # Date in ISO format (yyyy-mm-dd)
+            "app_id": self.app_id,
+            "dose": self.dose
+        }
+
+
+class Appointment(db.Model):
+    __tablename__ = 'appointment'
+
+    app_id = db.Column(db.Integer, primary_key=True)  # Assuming auto-incremented here
+    pat_id = db.Column(db.Integer, db.ForeignKey('patient.pat_id'), nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey('doctor.doc_id'), nullable=False)
+    appointment_date = db.Column(db.Date, nullable=False)
+
+    # Relationships
+    patient = db.relationship('Patient', backref='appointments', lazy=True)
+    doctor = db.relationship('Doctor', backref='appointments', lazy=True)
+
+    def to_dict(self):
+        """Convert Appointment object to dictionary"""
+        return {
+            "app_id": self.app_id,
+            "pat_id": self.pat_id,
+            "doc_id": self.doc_id,
+            "appointment_date": self.appointment_date.strftime('%Y-%m-%d'),
+            "patient_name": f"{self.patient.pat_first_name} {self.patient.pat_last_name}",
+            "doctor_name": f"{self.doctor.doc_first_name} {self.doctor.doc_last_name}"
+        }
+
