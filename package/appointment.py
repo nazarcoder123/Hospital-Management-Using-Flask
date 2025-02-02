@@ -31,7 +31,6 @@ class AppointmentResource(Resource):
         if appointment:
             return appointment.to_dict(), 200
         return {'msg': 'Appointment not found'}, 404
-    
 
     def put(self, id):
         """Update the appointment details by the appointment id"""
