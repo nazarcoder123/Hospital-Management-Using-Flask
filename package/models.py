@@ -160,3 +160,18 @@ class Medication(db.Model):
             "brand": self.brand,
             "description": self.description
         }
+        
+class Procedure(db.Model):
+    __tablename__ = 'procedure'
+
+    code = db.Column(db.String(50), primary_key=True)  
+    name = db.Column(db.String(100), nullable=False)
+    cost = db.Column(db.Float, nullable=False)
+
+    def to_dict(self):
+        """Convert Procedure object to dictionary"""
+        return {
+            "code": self.code,
+            "name": self.name,
+            "cost": self.cost
+        }

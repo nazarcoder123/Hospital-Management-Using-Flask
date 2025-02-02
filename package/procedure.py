@@ -1,53 +1,58 @@
-from flask_restful import Resource, Api, request
-from package.model import conn
-
-
+from flask_restful import Resource, request
+from package.models import db, Procedure
 
 class Procedures(Resource):
-    """This contain apis to carry out activity with all procedures"""
+    """This contains APIs to manage all procedures"""
 
     def get(self):
-        """Retrive all the procedure and return in form of json"""
-
-        procedure = conn.execute("SELECT * from procedure").fetchall()
-        return procedure
+        """Retrieve all procedures and return them as JSON"""
+        procedures = Procedure.query.all()  # ORM query to get all procedures
+        return [proc.to_dict() for proc in procedures], 200
 
     def post(self):
-        """Api to add procedure in the database"""
+        """API to add a new procedure to the database"""
+        procedure_data = request.get_json(force=True)
 
-        procedure = request.get_json(force=True)
-        code = procedure['code']
-        name = procedure['name']
-        cost = procedure['cost']
-        conn.execute('''INSERT INTO procedure(code, name, cost) VALUES(?,?,?)''', (code, name, cost))
-        conn.commit()
-        return procedure
-
-
-
-class Procedure(Resource):
-    """This contain all api doing activity with single procedure"""
-
-    def get(self,code):
-        """retrive a singe procedure details by its code"""
-
-        procedure = conn.execute("SELECT * FROM procedure WHERE code=?",(code,)).fetchall()
-        return procedure
+        new_procedure = Procedure(
+            code=procedure_data['code'],
+            name=procedure_data['name'],
+            cost=procedure_data['cost']
+        )
+        
+        db.session.add(new_procedure)
+        db.session.commit()
+        return new_procedure.to_dict(), 201
 
 
-    def delete(self,code):
+class ProcedureResource(Resource):
+    """This contains APIs for managing a single procedure"""
+
+    def get(self, code):
+        """Retrieve a single procedure by its code"""
+        procedure = Procedure.query.filter_by(code=code).first()
+        if procedure:
+            return procedure.to_dict(), 200
+        return {'msg': 'Procedure not found'}, 404
+
+    def put(self, code):
+        """Update the procedure details by its code"""
+        procedure = Procedure.query.filter_by(code=code).first()
+        if not procedure:
+            return {'msg': 'Procedure not found'}, 404
+
+        procedure_data = request.get_json(force=True)
+        procedure.name = procedure_data['name']
+        procedure.cost = procedure_data['cost']
+
+        db.session.commit()
+        return procedure.to_dict(), 200
+
+    def delete(self, code):
         """Delete the procedure by its code"""
+        procedure = Procedure.query.filter_by(code=code).first()
+        if not procedure:
+            return {'msg': 'Procedure not found'}, 404
 
-        conn.execute("DELETE FROM procedure WHERE code=?",(code,))
-        conn.commit()
-        return {'msg': 'sucessfully deleted'}
-
-    def put(self,code):
-        """Update the procedure details by the code"""
-
-        procedure = request.get_json(force=True)
-        name = procedure['name']
-        cost = procedure['cost']
-        conn.execute("UPDATE procedure SET name=?,cost=? WHERE code=?", (name, cost, code))
-        conn.commit()
-        return procedure
+        db.session.delete(procedure)
+        db.session.commit()
+        return {'msg': 'Successfully deleted'}, 200
