@@ -1,7 +1,7 @@
 # package/patient.py
 import logging
 from flask_restful import Resource, request
-from package.models import db, Patient  # Import from package.models
+from package.models import db, Patient  
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
