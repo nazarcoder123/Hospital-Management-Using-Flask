@@ -8,6 +8,7 @@ from package.department import Departments, DepartmentResource
 from package.room import Rooms, RoomResource
 from package.prescribes import Prescribes, PrescribeResource  
 from package.appointment import Appointments, AppointmentResource
+from package.medication import Medications, MedicationResource
 from package.models import db  
 import os
 
@@ -42,7 +43,9 @@ api.add_resource(RoomResource, '/room/<int:room_no>')
 api.add_resource(Prescribes, '/prescribes')
 api.add_resource(PrescribeResource, '/prescribe/<int:doc_id>')
 api.add_resource(Appointments, '/appointment')  
-api.add_resource(AppointmentResource, '/appointment/<int:id>') 
+api.add_resource(AppointmentResource, '/appointment/<int:id>')
+api.add_resource(Medications, '/medication')
+api.add_resource(MedicationResource, '/medication/<string:code>')
 
 
 

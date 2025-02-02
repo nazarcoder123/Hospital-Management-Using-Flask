@@ -144,3 +144,19 @@ class Appointment(db.Model):
             "doctor_name": f"{self.doctor.doc_first_name} {self.doctor.doc_last_name}"
         }
 
+class Medication(db.Model):
+    __tablename__ = 'medication'
+
+    code = db.Column(db.String(50), primary_key=True)  # Assuming code is unique
+    name = db.Column(db.String(100), nullable=False)
+    brand = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+    def to_dict(self):
+        """Convert Medication object to dictionary"""
+        return {
+            "code": self.code,
+            "name": self.name,
+            "brand": self.brand,
+            "description": self.description
+        }
