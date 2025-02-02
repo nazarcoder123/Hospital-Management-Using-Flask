@@ -1,10 +1,10 @@
-# app.py
 import json
 from flask import Flask, send_from_directory
 from flask_restful import Api
-from package.patient import Patients, PatientResource  # ORM-based patient resources
-from package.doctor import Doctors, DoctorResource      # ORM-based doctor resources
-from package.models import db  # Ensure this is the same db instance
+from package.patient import Patients, PatientResource  
+from package.doctor import Doctors, DoctorResource      
+from package.nurse import Nurses, NurseResource
+from package.models import db  
 import os
 
 with open('config.json') as data_file:
@@ -24,6 +24,8 @@ api.add_resource(Patients, '/patient')
 api.add_resource(PatientResource, '/patient/<int:id>')
 api.add_resource(Doctors, '/doctor')
 api.add_resource(DoctorResource, '/doctor/<int:id>')
+api.add_resource(Nurses, '/nurse')
+api.add_resource(NurseResource, '/nurse/<int:id>')
 
 @app.route('/favicon.ico')
 def favicon():

@@ -49,3 +49,22 @@ class Doctor(db.Model):
             'doc_date': self.doc_date.isoformat() if self.doc_date else None,
         }
         
+class Nurse(db.Model):
+    __tablename__ = 'nurse'
+    nur_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nur_first_name = db.Column(db.String(100), nullable=False)
+    nur_last_name = db.Column(db.String(100), nullable=False)
+    nur_ph_no = db.Column(db.String(15), nullable=False)
+    nur_address = db.Column(db.String(255), nullable=False)
+    nur_date = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    def to_dict(self):
+        """Convert Nurse object to dictionary."""
+        return {
+            "nur_id": self.nur_id,
+            "nur_first_name": self.nur_first_name,
+            "nur_last_name": self.nur_last_name,
+            "nur_ph_no": self.nur_ph_no,
+            "nur_address": self.nur_address,
+            "nur_date": self.nur_date.strftime("%Y-%m-%d %H:%M:%S") if self.nur_date else None
+        }
