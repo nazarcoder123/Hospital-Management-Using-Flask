@@ -1,62 +1,64 @@
-from flask_restful import Resource, Api, request
-from package.model import conn
+from flask_restful import Resource, request
+from package.models import db, Undergoes
 
-
-
-class Undergoess(Resource):
-    """This contain apis to carry out activity with all undergoess"""
+class UndergoesList(Resource):
+    """APIs for all undergoes records"""
 
     def get(self):
-        """Retrive all the undergoes and return in form of json"""
-
-        # undergoes = conn.execute("SELECT * from undergoes").fetchall()
-        undergoes = conn.execute("SELECT undergoes.doc_id, doctor.doc_first_name, doctor.doc_last_name, undergoes.pat_id, patient.pat_first_name, patient.pat_last_name, undergoes.proc_code, undergoes.u_date, undergoes.nur_id, nurse.nur_first_name, nurse.nur_last_name, undergoes.room_no FROM undergoes INNER JOIN doctor ON undergoes.doc_id = doctor.doc_id INNER JOIN patient ON undergoes.pat_id = patient.pat_id INNER JOIN nurse ON undergoes.nur_id = nurse.nur_id").fetchall()
-
-        return undergoes
+        """Retrieve all undergoes records"""
+        undergoes_records = Undergoes.query.all()
+        return [record.to_dict() for record in undergoes_records], 200
 
     def post(self):
-        """Api to add undergoes in the database"""
+        """Add a new undergoes record"""
+        undergoes_data = request.get_json(force=True)
 
-        undergoes = request.get_json(force=True)
-        doc_id = undergoes['doc_id']
-        pat_id = undergoes['pat_id']
-        proc_code = undergoes['proc_code']
-        u_date = undergoes['u_date']
-        nur_id = undergoes['nur_id']
-        room_no = undergoes['room_no']
-        conn.execute('''INSERT INTO undergoes(pat_id, proc_code, u_date, doc_id, nur_id, room_no) VALUES(?,?,?,?,?,?)''', (pat_id, proc_code, u_date, doc_id, nur_id, room_no))
-        conn.commit()
-        return undergoes
+        new_undergoes = Undergoes(
+            pat_id=undergoes_data['pat_id'],
+            proc_code=undergoes_data['proc_code'],
+            u_date=undergoes_data['u_date'],
+            doc_id=undergoes_data['doc_id'],
+            nur_id=undergoes_data['nur_id'],
+            room_no=undergoes_data['room_no']
+        )
 
-
-
-class Undergoes(Resource):
-    """This contain all api doing activity with single undergoes"""
-
-    def get(self,pat_id):
-        """retrive a singe undergoes details by its pat_id"""
-
-        undergoes = conn.execute("SELECT * FROM undergoes WHERE pat_id=?",(pat_id,)).fetchall()
-        return undergoes
+        db.session.add(new_undergoes)
+        db.session.commit()
+        return new_undergoes.to_dict(), 201
 
 
-    def delete(self,pat_id):
-        """Delete the undergoes by its doc_id"""
+class UndergoesResource(Resource):
+    """APIs for single undergoes record"""
 
-        conn.execute("DELETE FROM undergoes WHERE pat_id=?",(pat_id,))
-        conn.commit()
-        return {'msg': 'sucessfully deleted'}
+    def get(self, pat_id):
+        """Retrieve a single undergoes record by pat_id"""
+        undergoes = Undergoes.query.filter_by(pat_id=pat_id).first()
+        if undergoes:
+            return undergoes.to_dict(), 200
+        return {'msg': 'Undergoes record not found'}, 404
 
-    def put(self,pat_id):
-        """Update the undergoes details by the doc_id"""
+    def put(self, pat_id):
+        """Update an undergoes record"""
+        undergoes = Undergoes.query.filter_by(pat_id=pat_id).first()
+        if not undergoes:
+            return {'msg': 'Undergoes record not found'}, 404
 
-        undergoes = request.get_json(force=True)
-        doc_id = undergoes['doc_id']
-        pat_id = undergoes['pat_id']
-        proc_code = undergoes['proc_code']
-        u_date = undergoes['u_date']
-        app_id = undergoes['app_id']
-        room_no = undergoes['room_no']
-        conn.execute("UPDATE undergoes SET doc_id=?,pat_id=?,proc_code=?,u_date=?,app_id=?,room_no=?, WHERE pat_id=?", (doc_id, pat_id, proc_code, u_date, app_id, room_no, pat_id))
-        conn.commit()
-        return undergoes
+        undergoes_data = request.get_json(force=True)
+        undergoes.proc_code = undergoes_data['proc_code']
+        undergoes.u_date = undergoes_data['u_date']
+        undergoes.doc_id = undergoes_data['doc_id']
+        undergoes.nur_id = undergoes_data['nur_id']
+        undergoes.room_no = undergoes_data['room_no']
+
+        db.session.commit()
+        return undergoes.to_dict(), 200
+
+    def delete(self, pat_id):
+        """Delete an undergoes record"""
+        undergoes = Undergoes.query.filter_by(pat_id=pat_id).first()
+        if not undergoes:
+            return {'msg': 'Undergoes record not found'}, 404
+
+        db.session.delete(undergoes)
+        db.session.commit()
+        return {'msg': 'Successfully deleted'}, 200

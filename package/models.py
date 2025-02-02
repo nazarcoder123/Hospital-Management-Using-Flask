@@ -175,3 +175,35 @@ class Procedure(db.Model):
             "name": self.name,
             "cost": self.cost
         }
+        
+
+class Undergoes(db.Model):
+    __tablename__ = 'undergoes'
+
+    pat_id = db.Column(db.Integer, db.ForeignKey('patient.pat_id'), primary_key=True)
+    proc_code = db.Column(db.String(50), db.ForeignKey('procedure.code'), nullable=False)
+    u_date = db.Column(db.Date, nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey('doctor.doc_id'), nullable=False)
+    nur_id = db.Column(db.Integer, db.ForeignKey('nurse.nur_id'), nullable=False)
+    room_no = db.Column(db.Integer, nullable=False)
+
+    # Relationships
+    patient = db.relationship('Patient', backref='undergoes')
+    doctor = db.relationship('Doctor', backref='undergoes')
+    nurse = db.relationship('Nurse', backref='undergoes')
+    procedure = db.relationship('Procedure', backref='undergoes')
+
+    def to_dict(self):
+        """Convert Undergoes object to dictionary"""
+        return {
+            "pat_id": self.pat_id,
+            "patient_name": f"{self.patient.pat_first_name} {self.patient.pat_last_name}",
+            "proc_code": self.proc_code,
+            "procedure_name": self.procedure.name,
+            "u_date": self.u_date.strftime('%Y-%m-%d'),
+            "doc_id": self.doc_id,
+            "doctor_name": f"{self.doctor.doc_first_name} {self.doctor.doc_last_name}",
+            "nur_id": self.nur_id,
+            "nurse_name": f"{self.nurse.nur_first_name} {self.nurse.nur_last_name}",
+            "room_no": self.room_no
+        }

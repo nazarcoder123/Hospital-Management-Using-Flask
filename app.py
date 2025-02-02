@@ -10,6 +10,7 @@ from package.prescribes import Prescribes, PrescribeResource
 from package.appointment import Appointments, AppointmentResource
 from package.medication import Medications, MedicationResource
 from package.procedure import Procedures, ProcedureResource
+from package.undergoes import UndergoesList, UndergoesResource
 from package.models import db  
 import os
 
@@ -49,6 +50,8 @@ api.add_resource(Medications, '/medication')
 api.add_resource(MedicationResource, '/medication/<string:code>')
 api.add_resource(Procedures, '/procedure')
 api.add_resource(ProcedureResource, '/procedure/<string:code>')
+api.add_resource(UndergoesList, '/undergoes')
+api.add_resource(UndergoesResource, '/undergoes/<int:pat_id>')
 
 
 
