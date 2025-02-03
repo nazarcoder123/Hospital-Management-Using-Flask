@@ -52,9 +52,6 @@ api.add_resource(ProcedureResource, '/procedure/<string:code>')
 api.add_resource(UndergoesList, '/undergoes')
 api.add_resource(UndergoesResource, '/undergoes/<int:pat_id>')
 
-# OPTIONAL: If you want to add the 'Common' resource from common.py:
-# from package.common import Common
-# api.add_resource(Common, '/common')
 
 @app.route('/favicon.ico')
 def favicon():
