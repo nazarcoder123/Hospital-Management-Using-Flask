@@ -11,7 +11,7 @@ from package.appointment import Appointments, AppointmentResource
 from package.medication import Medications, MedicationResource
 from package.procedure import Procedures, ProcedureResource
 from package.undergoes import UndergoesList, UndergoesResource
-from package.models import db  
+from package.models import db  # Make sure this matches your models.py
 import os
 
 # Load configuration from file
@@ -28,10 +28,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the SQLAlchemy instance with the app
 db.init_app(app)
-
 api = Api(app)
 
-# Add resources for Patients, Doctors, Nurses, Departments, and Rooms
+# Add resources for Patients, Doctors, Nurses, Departments, Rooms, etc.
 api.add_resource(Patients, '/patient')
 api.add_resource(PatientResource, '/patient/<int:id>')
 api.add_resource(Doctors, '/doctor')
@@ -53,13 +52,16 @@ api.add_resource(ProcedureResource, '/procedure/<string:code>')
 api.add_resource(UndergoesList, '/undergoes')
 api.add_resource(UndergoesResource, '/undergoes/<int:pat_id>')
 
-
-
+# OPTIONAL: If you want to add the 'Common' resource from common.py:
+# from package.common import Common
+# api.add_resource(Common, '/common')
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico', mimetype='image/vnd.microsoft.icon'
+    )
 
 @app.route('/')
 def index():
@@ -67,5 +69,8 @@ def index():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  
+        db.create_all()
     app.run(debug=True, host=config['host'], port=config['port'])
+
+
+

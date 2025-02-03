@@ -1,6 +1,6 @@
 import logging
 from flask_restful import Resource
-from package.model import db  
+from package.models import db  
 from sqlalchemy import text
 
 # Configure logging
@@ -15,6 +15,7 @@ class Common(Resource):
         Retrieve counts for patient, doctor, appointment, medication, department, nurse,
         room, procedure, prescribes, and undergoes from the database.
         """
+        # Notice the quoted "procedure" table to avoid reserved word issues
         query = text("""
             SELECT 
                 (SELECT COUNT(*) FROM patient) AS patient,

@@ -1,5 +1,5 @@
 from flask_restful import Resource, request
-from package.models import db, Prescribe  # Assuming `db` is your SQLAlchemy instance and Prescribe is the model
+from package.models import db, Prescribe  
 
 
 class Prescribes(Resource):
