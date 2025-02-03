@@ -419,13 +419,23 @@ class Undergoes(db.Model):
     def to_dict(self):
         return {
             "pat_id": self.pat_id,
-            "patient_name": f"{self.patient.pat_first_name} {self.patient.pat_last_name}" if self.patient else None,
+            # Instead of "patient_name", return pat_first_name & pat_last_name
+            "pat_first_name": self.patient.pat_first_name if self.patient else None,
+            "pat_last_name": self.patient.pat_last_name if self.patient else None,
+
             "proc_code": self.proc_code,
             "procedure_name": self.procedure.name if self.procedure else None,
             "u_date": self.u_date.strftime('%Y-%m-%d') if self.u_date else None,
+
             "doc_id": self.doc_id,
-            "doctor_name": f"{self.doctor.doc_first_name} {self.doctor.doc_last_name}" if self.doctor else None,
+            # Instead of "doctor_name", return doc_first_name & doc_last_name
+            "doc_first_name": self.doctor.doc_first_name if self.doctor else None,
+            "doc_last_name": self.doctor.doc_last_name if self.doctor else None,
+
             "nur_id": self.nur_id,
-            "nurse_name": f"{self.nurse.nur_first_name} {self.nurse.nur_last_name}" if self.nurse else None,
+            # If your table wants nurse_first_name / nurse_last_name:
+            "nur_first_name": self.nurse.nur_first_name if self.nurse else None,
+            "nur_last_name": self.nurse.nur_last_name if self.nurse else None,
+
             "room_no": self.room_no
-        }
+    }
